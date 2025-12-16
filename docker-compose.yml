@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: owasp-labs-db
+    environment:
+      POSTGRES_DB: owasp_labs
+      POSTGRES_USER: labs_admin
+      POSTGRES_PASSWORD: labs_password_123
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./database/vulnerable_schemas.sql:/docker-entrypoint-initdb.d/02-vulnerable.sql
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - owasp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U labs_admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (Flask/Python)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: owasp-labs-backend
+    environment:
+      FLASK_ENV: development
+      FLASK_APP: app.py
+      DATABASE_URL: postgresql://labs_admin:labs_password_123@postgres:5432/owasp_labs
+      SECRET_KEY: your-secret-key-change-in-production
+      JWT_SECRET: weak-jwt-secret-for-learning
+    volumes:
+      - ./backend:/app
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - owasp-network
+    command: python app.py
+
+  # Frontend (React/Node.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: owasp-labs-frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:5000
+      REACT_APP_WS_URL: ws://localhost:5000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - owasp-network
+    command: npm start
+
+  # Redis for session management
+  redis:
+    image: redis:7-alpine
+    container_name: owasp-labs-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - owasp-network
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  owasp-network:
+    driver: bridge
