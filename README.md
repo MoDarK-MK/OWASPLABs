@@ -434,15 +434,6 @@ Found a bug? Please report it!
 
 ---
 
-## 📞 Support & Contact
-
-- 📧 Email: [your-email@example.com]
-- 💬 Discord: [Join our community]
-- 🐦 Twitter: [@YourHandle]
-- 🌐 Website: [your-website.com]
-
----
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
