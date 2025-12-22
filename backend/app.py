@@ -10,31 +10,28 @@ from dotenv import load_dotenv
 import jwt
 import redis
 
-# Load environment variables
 load_dotenv()
 
-# Initialize Flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'change-me-in-production')
 CORS(app)
 
-# Database connection
 DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://labs_admin:labs_password_123@localhost:5432/owasp_labs')
 engine = create_engine(DATABASE_URL, echo=True)
 
-# Redis for session management
-redis_client = redis.Redis(host='redis', port=6379, db=0, decode_responses=True)
+try:
+    redis_host = os.getenv('REDIS_HOST', 'localhost')
+    redis_port = int(os.getenv('REDIS_PORT', 6379))
+    redis_client = redis.Redis(host=redis_host, port=redis_port, db=0, decode_responses=True, socket_connect_timeout=5)
+    redis_client.ping()
+except Exception as e:
+    logger.warning(f"Redis connection failed: {e}. Continuing without Redis.")
+    redis_client = None
 
-# Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ==========================================
-# Authentication & Authorization
-# ==========================================
-
 def require_auth(f):
-    """Decorator to require authentication"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         token = request.headers.get('Authorization', '').replace('Bearer ', '')
@@ -54,13 +51,8 @@ def require_auth(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# ==========================================
-# Health Check
-# ==========================================
-
 @app.route('/health', methods=['GET'])
 def health():
-    """Health check endpoint"""
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
@@ -68,13 +60,8 @@ def health():
     except Exception as e:
         return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
 
-# ==========================================
-# Authentication Endpoints
-# ==========================================
-
 @app.route('/api/auth/register', methods=['POST'])
 def register():
-    """Register a new user (vulnerable by design)"""
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
@@ -85,7 +72,6 @@ def register():
     
     try:
         with engine.connect() as conn:
-            # Intentionally vulnerable - no proper parameterization in some cases
             conn.execute(text(
                 f"INSERT INTO users (username, password, email, role, created_at) "
                 f"VALUES ('{username}', '{password}', '{email}', 'user', NOW())"
@@ -99,14 +85,12 @@ def register():
 @app.route('/api/auth/login', methods=['POST'])
 def login():
     """Login endpoint (vulnerable by design)"""
-    data = request.get_json()
     username = data.get('username')
     password = data.get('password')
     
     try:
         with engine.connect() as conn:
-            # SQL Injection vulnerability - intentional
-            result = conn.execute(text(
+
                 f"SELECT id, username, password, role FROM users WHERE username = '{username}' AND password = '{password}'"
             ))
             user = result.fetchone()
@@ -134,15 +118,9 @@ def logout():
     """Logout endpoint"""
     return jsonify({'message': 'Logged out successfully'}), 200
 
-# ==========================================
-# Lab Management
-# ==========================================
-
 @app.route('/api/labs', methods=['GET'])
 @require_auth
 def get_labs():
-    """Get all available labs for the user"""
-    try:
         with engine.connect() as conn:
             result = conn.execute(text(
                 "SELECT id, title, category, difficulty, description, points FROM labs ORDER BY category, difficulty"
@@ -162,7 +140,6 @@ def get_lab(lab_id):
             result = conn.execute(text(
                 f"SELECT * FROM labs WHERE id = {lab_id}"
             ))
-            lab = result.fetchone()
         
         if lab:
             return jsonify(dict(lab._mapping)), 200
@@ -177,14 +154,12 @@ def start_lab(lab_id):
     """Start a lab session"""
     try:
         with engine.connect() as conn:
-            # Record lab session
+
             conn.execute(text(
                 f"INSERT INTO lab_sessions (user_id, lab_id, started_at) "
                 f"VALUES ({request.user_id}, {lab_id}, NOW())"
-            ))
-            conn.commit()
-        
-        return jsonify({'message': 'Lab session started', 'lab_id': lab_id}), 200
+    try:
+        with engine.connect() as conn:': 'Lab session started', 'lab_id': lab_id}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -194,13 +169,11 @@ def submit_flag(lab_id):
     """Submit flag for lab completion"""
     data = request.get_json()
     flag = data.get('flag')
+    data = request.get_json()
+    flag = data.get('flag')
     
     try:
         with engine.connect() as conn:
-            # Get the correct flag
-            result = conn.execute(text(
-                f"SELECT flag FROM labs WHERE id = {lab_id}"
-            ))
             lab = result.fetchone()
             
             if not lab:
@@ -209,19 +182,16 @@ def submit_flag(lab_id):
             correct_flag = lab[0]
             
             if flag == correct_flag:
-                # Update lab progress
+
                 conn.execute(text(
                     f"UPDATE lab_sessions SET completed_at = NOW(), status = 'completed' "
                     f"WHERE user_id = {request.user_id} AND lab_id = {lab_id} AND completed_at IS NULL"
                 ))
-                conn.commit()
-                
-                # Get lab points
+
                 result = conn.execute(text(f"SELECT points FROM labs WHERE id = {lab_id}"))
                 points = result.fetchone()[0]
                 
                 return jsonify({
-                    'success': True,
                     'message': 'Flag is correct!',
                     'points': points,
                     'timestamp': datetime.utcnow().isoformat()
@@ -238,7 +208,6 @@ def get_hint(lab_id):
     hint_level = request.args.get('level', 1, type=int)
     
     try:
-        with engine.connect() as conn:
             result = conn.execute(text(
                 f"SELECT hint_{hint_level} FROM labs WHERE id = {lab_id}"
             ))
@@ -252,19 +221,10 @@ def get_hint(lab_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ==========================================
-# User Progress
-# ==========================================
-
+@app.route('/api/user/progress', methods=['GET'])
 @app.route('/api/user/progress', methods=['GET'])
 @require_auth
-def get_user_progress():
-    """Get user progress and statistics"""
-    try:
-        with engine.connect() as conn:
-            result = conn.execute(text(
-                f"SELECT COUNT(*) as total_labs, "
-                f"SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_labs, "
+def get_user_progress():completed' THEN 1 ELSE 0 END) as completed_labs, "
                 f"SUM(CASE WHEN status = 'completed' THEN l.points ELSE 0 END) as total_points "
                 f"FROM lab_sessions ls JOIN labs l ON ls.lab_id = l.id "
                 f"WHERE ls.user_id = {request.user_id}"
@@ -290,7 +250,6 @@ def get_user_profile():
             ))
             user = result.fetchone()
         
-        if user:
             return jsonify({
                 'id': user[0],
                 'username': user[1],
@@ -303,22 +262,13 @@ def get_user_profile():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ==========================================
-# Leaderboard
-# ==========================================
-
 @app.route('/api/leaderboard', methods=['GET'])
 def get_leaderboard():
     """Get global leaderboard"""
     limit = request.args.get('limit', 100, type=int)
     
-    try:
-        with engine.connect() as conn:
-            result = conn.execute(text(
-                f"SELECT u.id, u.username, COUNT(DISTINCT ls.lab_id) as labs_completed, "
-                f"SUM(l.points) as total_points, MAX(ls.completed_at) as last_completed "
-                f"FROM lab_sessions ls "
-                f"JOIN users u ON ls.user_id = u.id "
+@app.route('/api/leaderboard', methods=['GET'])
+def get_leaderboard():N ls.user_id = u.id "
                 f"JOIN labs l ON ls.lab_id = l.id "
                 f"WHERE ls.status = 'completed' "
                 f"GROUP BY u.id, u.username "
@@ -331,10 +281,6 @@ def get_leaderboard():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ==========================================
-# Error Handlers
-# ==========================================
-
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({'error': 'Not found'}), 404
@@ -344,9 +290,11 @@ def internal_error(error):
     logger.error(f'Internal server error: {str(error)}')
     return jsonify({'error': 'Internal server error'}), 500
 
-# ==========================================
-# Main
-# ==========================================
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({'error': 'Not found'}), 404
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+@app.errorhandler(500)
+def internal_error(error):
+    logger.error(f'Internal server error: {str(error)}')
+    return jsonify({'error': 'Internal server error'}), 500

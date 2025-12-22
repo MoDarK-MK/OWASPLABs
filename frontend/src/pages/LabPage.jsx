@@ -30,7 +30,6 @@ const LabPage = () => {
       const response = await api.get(`/api/labs/${labId}`);
       setLab(response.data);
 
-      // Start lab session
       await api.post(`/api/labs/${labId}/start`);
     } catch (error) {
       console.error("Failed to fetch lab:", error);
@@ -101,7 +100,7 @@ const LabPage = () => {
   return (
     <div className="min-h-screen bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4">
-        {/* Back Button */}
+        {}
         <button
           onClick={() => navigate("/dashboard")}
           className="flex items-center space-x-2 text-cyan-400 hover:text-cyan-300 mb-6 transition"
@@ -111,9 +110,9 @@ const LabPage = () => {
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
+          {}
           <div className="lg:col-span-2 space-y-6">
-            {/* Lab Header */}
+            {}
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
@@ -141,7 +140,7 @@ const LabPage = () => {
               <p className="text-gray-300 leading-relaxed">{lab.description}</p>
             </div>
 
-            {/* Lab Instructions */}
+            {}
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
               <div className="flex items-center space-x-2 mb-4">
                 <BookOpen size={20} className="text-cyan-400" />
@@ -157,7 +156,7 @@ const LabPage = () => {
               </div>
             </div>
 
-            {/* Flag Submission */}
+            {}
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
               <h2 className="text-xl font-bold text-white mb-4">Submit Flag</h2>
               <form onSubmit={handleSubmitFlag} className="space-y-4">
@@ -218,7 +217,7 @@ const LabPage = () => {
             </div>
           </div>
 
-          {/* Sidebar - Hints */}
+          {}
           <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 h-fit">
             <div className="flex items-center space-x-2 mb-4">
               <Lightbulb size={20} className="text-yellow-400" />
@@ -255,7 +254,7 @@ const LabPage = () => {
               </p>
             )}
 
-            {/* Lab Stats */}
+            {}
             <div className="mt-6 pt-6 border-t border-gray-700 space-y-2 text-sm">
               <p className="text-gray-400">
                 <strong>Category:</strong>

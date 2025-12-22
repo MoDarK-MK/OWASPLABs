@@ -98,7 +98,7 @@ const DashboardPage = () => {
   return (
     <div className="min-h-screen bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4">
-        {/* Header with Progress */}
+        {}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-4">Security Labs</h1>
           {progress && (
@@ -130,10 +130,10 @@ const DashboardPage = () => {
           )}
         </div>
 
-        {/* Filters */}
+        {}
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Search */}
+            {}
             <div className="relative">
               <Search
                 className="absolute left-3 top-3 text-gray-500"
@@ -148,7 +148,7 @@ const DashboardPage = () => {
               />
             </div>
 
-            {/* Category Filter */}
+            {}
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
@@ -162,7 +162,7 @@ const DashboardPage = () => {
               ))}
             </select>
 
-            {/* Difficulty Filter */}
+            {}
             <select
               value={difficultyFilter}
               onChange={(e) => setDifficultyFilter(e.target.value)}
@@ -177,7 +177,7 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* Labs Grid */}
+        {}
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin h-12 w-12 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -191,7 +191,7 @@ const DashboardPage = () => {
                 className="bg-gray-800 border border-gray-700 rounded-lg hover:border-cyan-500 transition-all hover:shadow-lg hover:shadow-cyan-500/20 overflow-hidden group"
               >
                 <div className="p-6">
-                  {/* Badge */}
+                  {}
                   <div className="flex items-start justify-between mb-3">
                     <span className="px-2 py-1 bg-blue-900/50 text-blue-300 text-xs font-medium rounded">
                       {lab.category.replace("_", " ").toUpperCase()}
@@ -205,17 +205,17 @@ const DashboardPage = () => {
                     </span>
                   </div>
 
-                  {/* Title */}
+                  {}
                   <h3 className="text-lg font-bold text-white mb-2 group-hover:text-cyan-400 transition">
                     {lab.title}
                   </h3>
 
-                  {/* Description */}
+                  {}
                   <p className="text-gray-400 text-sm mb-4 line-clamp-2">
                     {lab.description}
                   </p>
 
-                  {/* Points and Action */}
+                  {}
                   <div className="flex items-center justify-between pt-4 border-t border-gray-700">
                     <span className="text-yellow-400 font-semibold">
                       +{lab.points} XP

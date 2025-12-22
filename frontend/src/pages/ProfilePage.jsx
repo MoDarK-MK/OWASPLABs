@@ -48,7 +48,7 @@ const ProfilePage = ({ user: initialUser }) => {
   return (
     <div className="min-h-screen bg-gray-900 py-8">
       <div className="max-w-2xl mx-auto px-4">
-        {/* Profile Header */}
+        {}
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-8 mb-6">
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center space-x-4">
@@ -66,7 +66,7 @@ const ProfilePage = ({ user: initialUser }) => {
             </div>
           </div>
 
-          {/* Profile Info */}
+          {}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center space-x-3">
               <Mail className="text-cyan-400" size={20} />
@@ -89,7 +89,7 @@ const ProfilePage = ({ user: initialUser }) => {
           </div>
         </div>
 
-        {/* Statistics */}
+        {}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">

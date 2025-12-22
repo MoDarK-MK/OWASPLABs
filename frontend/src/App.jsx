@@ -7,7 +7,6 @@ import {
 } from "react-router-dom";
 import axios from "axios";
 
-// Import pages and components
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import LabPage from "./pages/LabPage";
@@ -16,11 +15,9 @@ import ProfilePage from "./pages/ProfilePage";
 import Navigation from "./components/Navigation";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// Set up axios instance
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 const api = axios.create({ baseURL: API_URL });
 
-// Add token to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("authToken");
   if (token) {
@@ -37,7 +34,7 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verify authentication on mount
+
     const token = localStorage.getItem("authToken");
     if (token) {
       verifyAuth();

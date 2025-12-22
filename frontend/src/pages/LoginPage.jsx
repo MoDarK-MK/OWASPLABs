@@ -33,7 +33,7 @@ const LoginPage = ({ onLogin }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        {/* Header */}
+        {}
         <div className="text-center mb-8">
           <div className="text-5xl mb-4">🛡️</div>
           <h1 className="text-4xl font-bold text-white mb-2">OWASP Labs</h1>
@@ -42,7 +42,7 @@ const LoginPage = ({ onLogin }) => {
           </p>
         </div>
 
-        {/* Login Form */}
+        {}
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-8 shadow-2xl">
           {error && (
             <div className="mb-6 p-4 bg-red-900/20 border border-red-700 rounded-lg flex items-start space-x-3">
@@ -55,7 +55,7 @@ const LoginPage = ({ onLogin }) => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Username */}
+            {}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Username
@@ -69,7 +69,7 @@ const LoginPage = ({ onLogin }) => {
               />
             </div>
 
-            {/* Password */}
+            {}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Password
@@ -83,7 +83,7 @@ const LoginPage = ({ onLogin }) => {
               />
             </div>
 
-            {/* Submit Button */}
+            {}
             <button
               type="submit"
               disabled={loading}
@@ -100,7 +100,7 @@ const LoginPage = ({ onLogin }) => {
             </button>
           </form>
 
-          {/* Demo Credentials Info */}
+          {}
           <div className="mt-6 p-4 bg-blue-900/20 border border-blue-700 rounded-lg">
             <p className="text-sm text-blue-300">
               <CheckCircle className="inline mr-2" size={16} />
@@ -110,7 +110,7 @@ const LoginPage = ({ onLogin }) => {
           </div>
         </div>
 
-        {/* Footer */}
+        {}
         <p className="text-center text-gray-400 text-sm mt-6">
           For educational purposes only | OWASP Foundation
         </p>

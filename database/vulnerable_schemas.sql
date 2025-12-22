@@ -1,8 +1,3 @@
--- ==========================================
--- SQL INJECTION LABS (20 total)
--- ==========================================
-
--- Level 1 Labs (Beginner)
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SQL Injection in Login Form - UNION Attack',
@@ -15,7 +10,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'UNION allows combining query results',
     'Use: '' UNION SELECT 1,2,3,4 --'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SQL Injection in Search Box - String-based',
@@ -28,7 +22,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'String concatenation in SQL can be exploited',
     'Look for where user input is directly concatenated'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Blind SQL Injection - Boolean-based',
@@ -41,7 +34,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Try: id=1 AND 1=1 vs id=1 AND 1=2',
     'Observe response differences to extract data'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Time-based Blind SQL Injection',
@@ -54,7 +46,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Introduce delays to measure response time',
     'Try: id=1 AND SLEEP(5)'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SQL Injection with Data Limitations',
@@ -64,11 +55,9 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     75,
     'FLAG{sqli_limited_input_2024}',
     'Try using SQL comments to bypass restrictions',
-    'Comments: # -- /* */',
+    'Comments: # -- ',
     'Combine techniques: truncation + comments'
 );
-
--- Level 2 Labs (Intermediate)
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Stacked Queries SQL Injection',
@@ -81,7 +70,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Try: id=1; DROP TABLE users; --',
     'Some databases support stacked queries'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SQL Injection in Advanced Filter',
@@ -94,7 +82,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Test each parameter independently',
     'Combine multiple injection points'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SQL Injection in ORDER BY Clause',
@@ -107,7 +94,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Try: sort=1 UNION SELECT...',
     'Determine number of columns first'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SQL Injection with Encoding/Bypass',
@@ -120,7 +106,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Double encoding might bypass filters',
     'Hex encoding: 0x...'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Multi-stage SQL Injection',
@@ -133,8 +118,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Second stage: data extraction',
     'Combine results from both stages'
 );
-
--- Level 3 Labs (Advanced)
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SQL Injection with WAF Bypass',
@@ -144,10 +127,9 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     150,
     'FLAG{sqli_waf_bypass_2024}',
     'Try case modification: UnIoN, sElEcT',
-    'Use inline comments: /**/SELECT',
+    'Use inline comments: SELECT',
     'Combine techniques for evasion'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SQL Injection in Stored Procedure',
@@ -160,7 +142,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Try breaking out of procedure context',
     'Use xp_cmdshell or similar functions'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Out-of-band SQL Injection (DNS Exfiltration)',
@@ -173,7 +154,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Services like dnslog.cn or burpcollaborator',
     'Craft DNS queries with concatenated data'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Second-order SQL Injection',
@@ -186,7 +166,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Triggered when data is retrieved',
     'Look for reflection in different context'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Advanced Blind Injection with INFORMATION_SCHEMA',
@@ -199,8 +178,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Extract column names and data types',
     'Build complete database map'
 );
-
--- Level 4 Labs (Master Challenge)
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Master Challenge: Combined SQLi + Authentication',
@@ -213,7 +190,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Stage 2: Escalate privileges',
     'Stage 3: Extract admin credentials'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Master Challenge: SQLi with Dynamic Query Building',
@@ -226,7 +202,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Multiple injection points possible',
     'Trace complete execution flow'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Master Challenge: SQLi in Complex Application Logic',
@@ -239,7 +214,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Inject at critical business logic points',
     'Track data flow through layers'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Master Challenge: SQLi + NoSQL Injection Combo',
@@ -252,7 +226,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Find which endpoint uses which',
     'Chain attacks together'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Master Challenge: Complete Database Compromise',
@@ -265,11 +238,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Modify application data and configuration',
     'Establish persistence and backdoor'
 );
-
--- ==========================================
--- SSRF LABS (20 total)
--- ==========================================
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Basic SSRF to Localhost',
@@ -282,7 +250,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Common ports: 8000, 8080, 9000',
     'Look for file reading endpoints'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SSRF to Internal IP Ranges',
@@ -295,7 +262,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Scan internal network for services',
     'Port 22, 3306, 5432 are common'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SSRF to Cloud Metadata Endpoint',
@@ -308,7 +274,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Try: /latest/meta-data/',
     'Retrieve IAM credentials'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SSRF with Port Hopping',
@@ -321,7 +286,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Octal notation: 0177 = 127',
     'Hex notation: 0x7f = 127'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SSRF to AWS Metadata Service',
@@ -334,7 +298,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Extract security credentials',
     'Use credentials for lateral movement'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SSRF with Redirect Chaining',
@@ -347,7 +310,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'That endpoint redirects to internal resource',
     'Application follows redirect'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SSRF for Internal Network Scanning',
@@ -360,7 +322,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Observe response times for closed vs open',
     'Map internal network topology'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SSRF Combined with XXE',
@@ -373,7 +334,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'SSRF to exfiltrate via external server',
     'Combine both techniques'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SSRF via CSV Upload',
@@ -386,7 +346,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Application processes CSV formulas',
     'URL fetching triggered during processing'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SSRF with Protocol Confusion',
@@ -399,8 +358,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Dict protocol: dict://server:port/stats',
     'Gopher: gopher://internal-service'
 );
-
--- Additional SSRF labs continue similarly...
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SSRF with Gzip Compression Bypass',
@@ -413,10 +370,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Use gzip encoding on URL',
     'Server decompresses and processes'
 );
-
--- Continue adding more SSRF, CSRF, XSS, XXE, IDOR, RCE, Command Injection labs...
--- (Truncated for brevity - full labs continue in similar pattern)
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'SSRF Master Challenge: Multi-stage Exploitation',
@@ -429,11 +382,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Stage 2: Exploit internal application',
     'Stage 3: Extract credentials and pivot'
 );
-
--- ==========================================
--- CSRF LABS (Sample 5)
--- ==========================================
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Simple CSRF - State Changing Request',
@@ -446,7 +394,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Victim must be authenticated',
     'Use hidden form fields'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'CSRF to Change Password',
@@ -459,11 +406,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Submit form without token',
     'New password becomes attacker-controlled'
 );
-
--- ==========================================
--- XSS LABS (Sample 3)
--- ==========================================
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Reflected XSS - Alert Box',
@@ -476,7 +418,6 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Look for user input in response',
     'Check source code comments'
 );
-
 INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1, hint_2, hint_3) VALUES
 (
     'Stored XSS in Comments',
@@ -489,5 +430,3 @@ INSERT INTO labs (title, description, category, difficulty, points, flag, hint_1
     'Script executes for all viewers',
     'Check for input validation'
 );
-
--- Continue with XXE, IDOR, RCE, Command Injection labs...
