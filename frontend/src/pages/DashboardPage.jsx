@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../App";
-import { Search, Filter, ChevronRight, Play } from "lucide-react";
+import { Search, Filter, ChevronRight, Play, AlertCircle } from "lucide-react";
 
 const DashboardPage = () => {
   const [labs, setLabs] = useState([]);
   const [filteredLabs, setFilteredLabs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [difficultyFilter, setDifficultyFilter] = useState("all");
@@ -24,10 +25,12 @@ const DashboardPage = () => {
 
   const fetchLabs = async () => {
     try {
+      setError("");
       const response = await api.get("/api/labs");
-      setLabs(response.data);
-    } catch (error) {
-      console.error("Failed to fetch labs:", error);
+      setLabs(response.data || []);
+    } catch (err) {
+      setError("Failed to load labs");
+      setLabs([]);
     } finally {
       setLoading(false);
     }
@@ -37,8 +40,8 @@ const DashboardPage = () => {
     try {
       const response = await api.get("/api/user/progress");
       setProgress(response.data);
-    } catch (error) {
-      console.error("Failed to fetch progress:", error);
+    } catch (err) {
+      console.error("Failed to fetch progress:", err);
     }
   };
 
@@ -48,8 +51,8 @@ const DashboardPage = () => {
     if (searchTerm) {
       filtered = filtered.filter(
         (lab) =>
-          lab.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          lab.description.toLowerCase().includes(searchTerm.toLowerCase())
+          lab.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          lab.description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -98,7 +101,6 @@ const DashboardPage = () => {
   return (
     <div className="min-h-screen bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4">
-        {}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-4">Security Labs</h1>
           {progress && (
@@ -130,10 +132,18 @@ const DashboardPage = () => {
           )}
         </div>
 
-        {}
+        {error && (
+          <div className="mb-6 p-4 bg-red-900/20 border border-red-700 rounded-lg flex items-start space-x-3">
+            <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
+            <div>
+              <p className="text-red-200 font-semibold">Error</p>
+              <p className="text-red-300 text-sm">{error}</p>
+            </div>
+          </div>
+        )}
+
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {}
             <div className="relative">
               <Search
                 className="absolute left-3 top-3 text-gray-500"
@@ -148,7 +158,6 @@ const DashboardPage = () => {
               />
             </div>
 
-            {}
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
@@ -162,7 +171,6 @@ const DashboardPage = () => {
               ))}
             </select>
 
-            {}
             <select
               value={difficultyFilter}
               onChange={(e) => setDifficultyFilter(e.target.value)}
@@ -177,7 +185,6 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {}
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin h-12 w-12 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -191,34 +198,30 @@ const DashboardPage = () => {
                 className="bg-gray-800 border border-gray-700 rounded-lg hover:border-cyan-500 transition-all hover:shadow-lg hover:shadow-cyan-500/20 overflow-hidden group"
               >
                 <div className="p-6">
-                  {}
                   <div className="flex items-start justify-between mb-3">
                     <span className="px-2 py-1 bg-blue-900/50 text-blue-300 text-xs font-medium rounded">
-                      {lab.category.replace("_", " ").toUpperCase()}
+                      {lab.category?.replace("_", " ").toUpperCase()}
                     </span>
                     <span
                       className={`px-2 py-1 text-xs font-medium rounded border ${getDifficultyColor(
-                        lab.difficulty
+                        lab.difficulty || 1
                       )}`}
                     >
-                      {getDifficultyLabel(lab.difficulty)}
+                      {getDifficultyLabel(lab.difficulty || 1)}
                     </span>
                   </div>
 
-                  {}
                   <h3 className="text-lg font-bold text-white mb-2 group-hover:text-cyan-400 transition">
                     {lab.title}
                   </h3>
 
-                  {}
                   <p className="text-gray-400 text-sm mb-4 line-clamp-2">
                     {lab.description}
                   </p>
 
-                  {}
                   <div className="flex items-center justify-between pt-4 border-t border-gray-700">
                     <span className="text-yellow-400 font-semibold">
-                      +{lab.points} XP
+                      +{lab.points || 100} XP
                     </span>
                     <button
                       onClick={() => navigate(`/lab/${lab.id}`)}
@@ -234,7 +237,7 @@ const DashboardPage = () => {
           </div>
         )}
 
-        {filteredLabs.length === 0 && !loading && (
+        {filteredLabs.length === 0 && !loading && !error && (
           <div className="text-center py-12">
             <p className="text-gray-400 text-lg">
               No labs found matching your filters.

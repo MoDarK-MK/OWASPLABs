@@ -44,10 +44,14 @@ const LabPage = () => {
       const response = await api.get(
         `/api/labs/${labId}/hint?level=${nextLevel}`
       );
-      setHint(response.data.hint);
+      setHint(response.data.hint || `Hint ${nextLevel} for ${lab.title}`);
       setHintLevel(nextLevel);
     } catch (error) {
       console.error("Failed to fetch hint:", error);
+      setHint(
+        `Hint ${nextLevel}: Try analyzing the application more carefully`
+      );
+      setHintLevel(nextLevel);
     }
   };
 
