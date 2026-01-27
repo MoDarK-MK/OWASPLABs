@@ -1,5 +1,8 @@
 import os
 import logging
+import subprocess
+import sys
+from pathlib import Path
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import Flask, request, jsonify
@@ -7,6 +10,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import jwt
 import hashlib
+from labs_database import get_all_labs, get_lab_by_id, get_labs_by_category
 
 load_dotenv()
 
@@ -17,6 +21,9 @@ CORS(app, resources={r"/api/*": {"origins": ["http://localhost:3000", "http://lo
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Path to labs directory
+LABS_DIR = Path(__file__).parent / 'labs'
+
 user_sessions = {}
 
 mock_users = {
@@ -25,16 +32,8 @@ mock_users = {
 
 completed_labs = {}
 
-mock_labs = [
-    {'id': 1, 'title': 'SQL Injection - Login Bypass', 'category': 'sql_injection', 'difficulty': 1, 'description': 'Bypass login using SQL injection', 'points': 100, 'flag': 'FLAG{sqli_basic}'},
-    {'id': 2, 'title': 'XSS in Search', 'category': 'xss', 'difficulty': 2, 'description': 'Execute XSS in search box', 'points': 100, 'flag': 'FLAG{xss_basic}'},
-    {'id': 3, 'title': 'CSRF Attack', 'category': 'csrf', 'difficulty': 3, 'description': 'Perform CSRF attack', 'points': 150, 'flag': 'FLAG{csrf_basic}'},
-    {'id': 4, 'title': 'IDOR Vulnerability', 'category': 'idor', 'difficulty': 2, 'description': 'Access other users resources', 'points': 100, 'flag': 'FLAG{idor_basic}'},
-    {'id': 5, 'title': 'Remote Code Execution', 'category': 'rce', 'difficulty': 4, 'description': 'Execute arbitrary code on server', 'points': 200, 'flag': 'FLAG{rce_basic}'},
-    {'id': 6, 'title': 'SSRF Attack', 'category': 'ssrf', 'difficulty': 3, 'description': 'Server-side request forgery attack', 'points': 150, 'flag': 'FLAG{ssrf_basic}'},
-    {'id': 7, 'title': 'XXE Injection', 'category': 'xxe', 'difficulty': 4, 'description': 'XML external entity injection attack', 'points': 200, 'flag': 'FLAG{xxe_basic}'},
-    {'id': 8, 'title': 'Command Injection', 'category': 'command_injection', 'difficulty': 4, 'description': 'Command injection attack', 'points': 200, 'flag': 'FLAG{command_injection_basic}'},
-]
+# Load all 160 labs from database
+mock_labs = get_all_labs()
 
 def require_auth(f):
     @wraps(f)
@@ -267,6 +266,68 @@ def not_found(error):
 def internal_error(error):
     logger.error(f'Internal server error: {str(error)}')
     return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/labs/<int:lab_id>/launch', methods=['GET'])
+@require_auth
+def launch_lab(lab_id):
+    """Launch practical lab file if it exists"""
+    try:
+        lab = get_lab_by_id(lab_id)
+        if not lab:
+            return jsonify({'error': 'Lab not found'}), 404
+        
+        category = lab.get('category', '')
+        
+        # Map lab ID to lab file (for XSS: lab 21-40 map to lab_1-20)
+        if category == 'xss':
+            lab_file_num = lab_id - 20  # Labs 21-40 -> 1-20
+            lab_file = LABS_DIR / 'xss' / f'lab_{lab_file_num}_*.py'
+            
+            # Find the actual file
+            import glob
+            files = glob.glob(str(lab_file))
+            if not files:
+                # Return success but note no practical lab
+                return jsonify({
+                    'message': 'Lab loaded',
+                    'practical_lab': None,
+                    'instructions': 'This lab is available in the training platform'
+                }), 200
+            
+            lab_path = files[0]
+            
+            # Try to start the lab
+            try:
+                port = 5000 + lab_file_num
+                process = subprocess.Popen(
+                    [sys.executable, str(lab_path)],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    cwd=str(LABS_DIR / 'xss')
+                )
+                
+                return jsonify({
+                    'message': 'Lab launched successfully',
+                    'practical_lab': f'http://localhost:{port}',
+                    'category': category,
+                    'lab_file': Path(lab_path).name
+                }), 200
+            except Exception as e:
+                logger.error(f'Failed to launch lab: {str(e)}')
+                return jsonify({
+                    'error': 'Failed to launch practical lab',
+                    'details': str(e)
+                }), 500
+        
+        return jsonify({
+            'message': 'Lab content loaded',
+            'practical_lab': None,
+            'instructions': 'No practical lab available for this category yet'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f'Lab launch error: {str(e)}')
+        return jsonify({'error': 'Failed to launch lab'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
