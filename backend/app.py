@@ -277,53 +277,81 @@ def launch_lab(lab_id):
             return jsonify({'error': 'Lab not found'}), 404
         
         category = lab.get('category', '')
+        title = lab.get('title', 'Lab')
         
-        # Map lab ID to lab file (for XSS: lab 21-40 map to lab_1-20)
-        if category == 'xss':
-            lab_file_num = lab_id - 20  # Labs 21-40 -> 1-20
-            lab_file = LABS_DIR / 'xss' / f'lab_{lab_file_num}_*.py'
-            
-            # Find the actual file
-            import glob
-            files = glob.glob(str(lab_file))
-            if not files:
-                # Return success but note no practical lab
-                return jsonify({
-                    'message': 'Lab loaded',
-                    'practical_lab': None,
-                    'instructions': 'This lab is available in the training platform'
-                }), 200
-            
-            lab_path = files[0]
-            
-            # Try to start the lab
-            try:
-                port = 5000 + lab_file_num
-                process = subprocess.Popen(
-                    [sys.executable, str(lab_path)],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    cwd=str(LABS_DIR / 'xss')
-                )
-                
-                return jsonify({
-                    'message': 'Lab launched successfully',
-                    'practical_lab': f'http://localhost:{port}',
-                    'category': category,
-                    'lab_file': Path(lab_path).name
-                }), 200
-            except Exception as e:
-                logger.error(f'Failed to launch lab: {str(e)}')
-                return jsonify({
-                    'error': 'Failed to launch practical lab',
-                    'details': str(e)
-                }), 500
+        # Define port mapping based on category and lab ID
+        category_port_map = {
+            'sql_injection': (1, 20, 5001),      # Labs 1-20 -> ports 5001-5020
+            'xss': (21, 40, 5021),               # Labs 21-40 -> ports 5021-5040
+            'csrf': (41, 60, 5041),              # Labs 41-60 -> ports 5041-5060
+            'idor': (61, 80, 5061),              # Labs 61-80 -> ports 5061-5080
+            'rce': (81, 100, 5081),              # Labs 81-100 -> ports 5081-5100
+            'ssrf': (101, 120, 5101),            # Labs 101-120 -> ports 5101-5120
+            'xxe': (121, 140, 5121),             # Labs 121-140 -> ports 5121-5140
+            'command_injection': (141, 160, 5141)  # Labs 141-160 -> ports 5141-5160
+        }
         
-        return jsonify({
-            'message': 'Lab content loaded',
-            'practical_lab': None,
-            'instructions': 'No practical lab available for this category yet'
-        }), 200
+        if category not in category_port_map:
+            return jsonify({
+                'message': 'Lab content loaded',
+                'practical_lab': None,
+                'instructions': 'No practical lab available for this category yet'
+            }), 200
+        
+        start_id, end_id, base_port = category_port_map[category]
+        
+        # Calculate lab file number and port
+        lab_file_num = lab_id - start_id + 1
+        port = base_port + lab_file_num - 1
+        
+        # Find the lab file
+        lab_dir = LABS_DIR / category
+        if not lab_dir.exists():
+            return jsonify({
+                'error': f'Lab directory not found: {category}'
+            }), 404
+        
+        # Find lab file (pattern: lab_N_*.py)
+        import glob
+        lab_pattern = str(lab_dir / f'lab_{lab_file_num}_*.py')
+        files = glob.glob(lab_pattern)
+        
+        if not files:
+            return jsonify({
+                'error': f'Lab file not found for {category} lab {lab_file_num}',
+                'pattern': lab_pattern
+            }), 404
+        
+        lab_path = files[0]
+        
+        # Try to start the lab
+        try:
+            process = subprocess.Popen(
+                [sys.executable, str(lab_path)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=str(lab_dir)
+            )
+            
+            # Store process info for later reference
+            logger.info(f'Started lab: {category}/{Path(lab_path).name} on port {port}')
+            
+            return jsonify({
+                'message': 'Lab launched successfully',
+                'practical_lab': f'http://localhost:{port}',
+                'category': category,
+                'lab_id': lab_id,
+                'lab_file': Path(lab_path).name,
+                'port': port,
+                'title': title
+            }), 200
+        except Exception as e:
+            logger.error(f'Failed to launch lab: {str(e)}')
+            return jsonify({
+                'error': 'Failed to launch practical lab',
+                'details': str(e),
+                'lab_file': lab_path
+            }), 500
         
     except Exception as e:
         logger.error(f'Lab launch error: {str(e)}')

@@ -10,6 +10,8 @@ import {
   Terminal,
   Eye,
   EyeOff,
+  Play,
+  ExternalLink,
 } from "lucide-react";
 import api from "../utils/api";
 
@@ -24,6 +26,8 @@ const LabPage = () => {
   const [result, setResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [showVulnerableCode, setShowVulnerableCode] = useState(false);
+  const [launching, setLaunching] = useState(false);
+  const [labUrl, setLabUrl] = useState(null);
 
   const labChallenges = {
     1: {
@@ -223,6 +227,32 @@ const LabPage = () => {
     }
   };
 
+  const handleLaunchLab = async () => {
+    setLaunching(true);
+    try {
+      const response = await api.get(`/api/labs/${labId}/launch`);
+      if (response.data.practical_lab) {
+        setLabUrl(response.data.practical_lab);
+        // Open lab in new window after 2 seconds
+        setTimeout(() => {
+          window.open(response.data.practical_lab, '_blank');
+        }, 500);
+      } else {
+        setResult({
+          success: false,
+          message: response.data.instructions || "Lab not available"
+        });
+      }
+    } catch (error) {
+      setResult({
+        success: false,
+        message: error.response?.data?.error || "Failed to launch lab"
+      });
+    } finally {
+      setLaunching(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
@@ -323,6 +353,39 @@ const LabPage = () => {
           </div>
 
           <div className="lg:col-span-1">
+            {/* Launch Lab Section */}
+            <div className="backdrop-blur-xl bg-gradient-to-br from-orange-500/10 to-red-600/10 border border-orange-500/30 rounded-xl p-6 mb-6 sticky top-8">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center space-x-2">
+                <Terminal size={24} className="text-orange-400" />
+                <span>Practical Lab</span>
+              </h3>
+
+              {labUrl ? (
+                <div className="space-y-4">
+                  <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4">
+                    <p className="text-green-300 text-sm font-semibold">✓ Lab Running</p>
+                    <p className="text-green-200 text-xs mt-1">{labUrl}</p>
+                  </div>
+                  <button
+                    onClick={() => window.open(labUrl, '_blank')}
+                    className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold rounded-lg transition flex items-center justify-center space-x-2"
+                  >
+                    <ExternalLink size={20} />
+                    <span>Open Lab Environment</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleLaunchLab}
+                  disabled={launching}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 disabled:from-slate-600 disabled:to-slate-700 text-white font-bold rounded-lg transition flex items-center justify-center space-x-2"
+                >
+                  <Play size={20} />
+                  <span>{launching ? "Launching..." : "Launch Lab"}</span>
+                </button>
+              )}
+            </div>
+
             <div className="backdrop-blur-xl bg-gradient-to-br from-cyan-500/10 to-blue-600/10 border border-cyan-500/30 rounded-xl p-6 sticky top-8">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center space-x-2">
                 <CheckCircle size={24} className="text-cyan-400" />
