@@ -2,6 +2,10 @@ import os
 import logging
 import subprocess
 import sys
+import threading
+import time
+import socket
+import importlib.util
 from pathlib import Path
 from datetime import datetime, timedelta
 from functools import wraps
@@ -267,6 +271,43 @@ def internal_error(error):
     logger.error(f'Internal server error: {str(error)}')
     return jsonify({'error': 'Internal server error'}), 500
 
+def is_port_open(port):
+    """Check if a port is already in use"""
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex(('127.0.0.1', port))
+        sock.close()
+        return result == 0
+    except:
+        return False
+
+def run_lab_in_thread(lab_path, lab_dir, port):
+    """Run a lab file in a background thread"""
+    try:
+        # Change to lab directory
+        original_cwd = os.getcwd()
+        os.chdir(str(lab_dir))
+        
+        # Add lab directory to Python path
+        if str(lab_dir) not in sys.path:
+            sys.path.insert(0, str(lab_dir))
+        
+        # Import and run the lab module
+        spec = importlib.util.spec_from_file_location(
+            Path(lab_path).stem,
+            str(lab_path)
+        )
+        module = importlib.util.module_from_spec(spec)
+        
+        # Execute the module (which should run Flask app)
+        spec.loader.exec_module(module)
+        
+        os.chdir(original_cwd)
+        logger.info(f'Lab on port {port} executed successfully')
+        
+    except Exception as e:
+        logger.error(f'Error running lab on port {port}: {str(e)}', exc_info=True)
+
 @app.route('/api/labs/<int:lab_id>/launch', methods=['GET'])
 @require_auth
 def launch_lab(lab_id):
@@ -318,24 +359,35 @@ def launch_lab(lab_id):
         
         if not files:
             return jsonify({
-                'error': f'Lab file not found for {category} lab {lab_file_num}',
-                'pattern': lab_pattern
+                'error': f'Lab file not found for {category} lab {lab_file_num}'
             }), 404
         
         lab_path = files[0]
         
-        # Try to start the lab
         try:
-            process = subprocess.Popen(
-                [sys.executable, str(lab_path)],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                cwd=str(lab_dir)
-            )
+            # Check if port is already in use
+            if not is_port_open(port):
+                # Start the lab in a background thread
+                thread = threading.Thread(
+                    target=run_lab_in_thread,
+                    args=(lab_path, lab_dir, port),
+                    daemon=True,
+                    name=f'lab_{lab_id}_thread'
+                )
+                thread.start()
+                
+                # Wait a moment for server to start
+                time.sleep(1.5)
+                
+                # Verify port is now open
+                if not is_port_open(port):
+                    logger.warning(f'Lab port {port} did not open within timeout')
+                
+                logger.info(f'Started lab thread: {category}/{Path(lab_path).name} on port {port}')
+            else:
+                logger.info(f'Lab already running on port {port}')
             
-            # Store process info for later reference
-            logger.info(f'Started lab: {category}/{Path(lab_path).name} on port {port}')
-            
+            # Return the URL where lab will be accessible
             return jsonify({
                 'message': 'Lab launched successfully',
                 'practical_lab': f'http://localhost:{port}',
@@ -345,17 +397,17 @@ def launch_lab(lab_id):
                 'port': port,
                 'title': title
             }), 200
+            
         except Exception as e:
-            logger.error(f'Failed to launch lab: {str(e)}')
+            logger.error(f'Failed to launch lab: {str(e)}', exc_info=True)
             return jsonify({
                 'error': 'Failed to launch practical lab',
-                'details': str(e),
-                'lab_file': lab_path
+                'details': str(e)
             }), 500
         
     except Exception as e:
-        logger.error(f'Lab launch error: {str(e)}')
-        return jsonify({'error': 'Failed to launch lab'}), 500
+        logger.error(f'Lab launch error: {str(e)}', exc_info=True)
+        return jsonify({'error': 'Failed to launch lab', 'details': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

